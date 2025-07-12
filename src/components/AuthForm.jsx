@@ -1,4 +1,3 @@
-// File: src/components/AuthForm.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,7 +16,6 @@ export default function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // This effect reads the URL parameter and sets the correct view (login or register)
   useEffect(() => {
     const view = searchParams.get("view");
     if (view === "register") {
