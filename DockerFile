@@ -1,63 +1,52 @@
 # =================================================================
-# Stage 1: Dependency Installation
+# Stage 1: Dependency Installation (No Change)
 # =================================================================
-# Use a specific, lightweight Node.js version as the base image.
-# Using '-alpine' results in a much smaller image size.
+# This stage remains the same, using a full Node image to install dependencies.
 FROM node:18-alpine AS deps
 WORKDIR /app
 
-# Copy package.json and lock file to leverage Docker's build cache.
-# This layer is only rebuilt if these files change.
 COPY package.json package-lock.json* ./
-# Install production dependencies only.
 RUN npm ci --only=production
 
 # =================================================================
-# Stage 2: Code Builder
+# Stage 2: Code Builder (No Change)
 # =================================================================
+# This stage also remains the same, using a full Node image to build the app.
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy dependencies from the previous stage.
 COPY --from=deps /app/node_modules ./node_modules
-# Copy the rest of the application source code.
 COPY . .
 
-# Install all dependencies (including devDependencies) needed for the build.
 RUN npm ci
-# Build the Next.js application for production.
 RUN npm run build
 
 # =================================================================
-# Stage 3: Production Runner
+# Stage 3: Production Runner (THIS IS THE NEW PART)
 # =================================================================
-# This is the final, small image that will be deployed.
-FROM node:18-alpine AS runner
+# This is our final, ultra-lightweight, and secure image.
+# We use Google's official 'distroless' image for Node.js 18.
+FROM gcr.io/distroless/nodejs18-debian11 AS runner
 WORKDIR /app
 
 # Set the environment to production.
 ENV NODE_ENV=production
-# Recommended: Set a different hostname than localhost
 ENV HOSTNAME 0.0.0.0
 
-# Create a non-root user for better security.
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copy the necessary built artifacts from the 'builder' stage.
+# The 'distroless' image has a default non-root user named 'nonroot'.
+# We copy the files and set ownership to this user for better security.
+COPY --from=builder --chown=nonroot:nonroot /app/public ./public
+COPY --from=builder --chown=nonroot:nonroot /app/.next/standalone ./
+COPY --from=builder --chown=nonroot:nonroot /app/.next/static ./.next/static
 
-# Automatically copy the output from the 'builder' stage.
-# This includes the .next folder, public folder, and node_modules.
-# This assumes you have enabled the standalone output mode in your next.config.js.
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Switch to the non-root user.
-USER nextjs
+# Switch the active user to the non-root user.
+USER nonroot
 
 # Expose the port the app will run on.
 EXPOSE 3000
 
 # The command to start the application.
-# This uses the optimized server file created by the standalone build.
-CMD ["node", "server.js"]
-
+# The distroless image's entrypoint is already set to "node",
+# so we just need to provide the server script.
+CMD ["server.js"]
