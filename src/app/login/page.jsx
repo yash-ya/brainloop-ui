@@ -9,6 +9,10 @@ function Loading() {
   );
 }
 
+export const metadata = {
+  title: "Login or Sign Up",
+};
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<Loading />}>

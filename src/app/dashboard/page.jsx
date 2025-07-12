@@ -18,6 +18,10 @@ import ProblemDetailModal from "@/components/ProblemDetailModal";
 import LogRevisionModal from "@/components/LogRevisionModal";
 import RevisionHistoryModal from "@/components/RevisionHistoryModal";
 
+export const metadata = {
+  title: "Dashboard",
+};
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
