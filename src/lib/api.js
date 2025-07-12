@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://stg-brainloop.api.midaytech.com/api/v1";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1`;
 
 const handleResponse = async (response) => {
   if (response.status === 204) {
