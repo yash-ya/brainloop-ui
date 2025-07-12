@@ -37,7 +37,6 @@ export default function AuthForm() {
         router.push("/dashboard");
       } else {
         await registerUser(username, email, password);
-        // On successful registration, redirect to login view
         router.push("/login");
       }
     } catch (error) {
@@ -138,7 +137,12 @@ export default function AuthForm() {
         <div className="text-sm text-center">
           <button
             type="button"
-            onClick={() => setIsLoginView(!isLoginView)}
+            onClick={() => {
+              setIsLoginView(!isLoginView);
+              setEmail("");
+              setPassword("");
+              setError("");
+            }}
             className="font-medium text-sky-600 hover:text-sky-500"
           >
             {isLoginView
