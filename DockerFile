@@ -1,0 +1,63 @@
+# =================================================================
+# Stage 1: Dependency Installation
+# =================================================================
+# Use a specific, lightweight Node.js version as the base image.
+# Using '-alpine' results in a much smaller image size.
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# Copy package.json and lock file to leverage Docker's build cache.
+# This layer is only rebuilt if these files change.
+COPY package.json package-lock.json* ./
+# Install production dependencies only.
+RUN npm ci --only=production
+
+# =================================================================
+# Stage 2: Code Builder
+# =================================================================
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy dependencies from the previous stage.
+COPY --from=deps /app/node_modules ./node_modules
+# Copy the rest of the application source code.
+COPY . .
+
+# Install all dependencies (including devDependencies) needed for the build.
+RUN npm ci
+# Build the Next.js application for production.
+RUN npm run build
+
+# =================================================================
+# Stage 3: Production Runner
+# =================================================================
+# This is the final, small image that will be deployed.
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Set the environment to production.
+ENV NODE_ENV=production
+# Recommended: Set a different hostname than localhost
+ENV HOSTNAME 0.0.0.0
+
+# Create a non-root user for better security.
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Automatically copy the output from the 'builder' stage.
+# This includes the .next folder, public folder, and node_modules.
+# This assumes you have enabled the standalone output mode in your next.config.js.
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to the non-root user.
+USER nextjs
+
+# Expose the port the app will run on.
+EXPOSE 3000
+
+# The command to start the application.
+# This uses the optimized server file created by the standalone build.
+CMD ["node", "server.js"]
+
