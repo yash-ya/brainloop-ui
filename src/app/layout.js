@@ -18,11 +18,15 @@ export const metadata = {
     "Interviews",
     "Coding",
   ],
+  icons: {
+    icon: "/Logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head></head>
       <body className={inter.className}>{children}</body>
     </html>
   );
