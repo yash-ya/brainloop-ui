@@ -19,7 +19,7 @@ export const metadata = {
     "Coding",
   ],
   icons: {
-    icon: "/Logo.png",
+    icon: "/Logo.ico",
   },
 };
 
