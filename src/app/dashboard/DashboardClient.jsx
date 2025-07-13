@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Select from "react-select";
 import {
   getProblems,
   deleteProblem,
@@ -9,6 +10,7 @@ import {
   logRevision,
 } from "@/lib/api";
 
+// Import all necessary components
 import ProblemEditorModal from "@/components/ProblemEditorModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import ProblemsTable from "@/components/ProblemsTable";
@@ -18,12 +20,41 @@ import RevisionHistoryModal from "@/components/RevisionHistoryModal";
 import LoopModal from "@/components/LoopModal";
 import FilterToggle from "@/components/FilterToggle";
 
-export default function DashboardClient({ initialProblems, user, token }) {
+// --- Options for the filter dropdowns ---
+const statusOptions = [
+  { value: "To Do", label: "To Do" },
+  { value: "In Progress", label: "In Progress" },
+  { value: "Done", label: "Done" },
+];
+
+const difficultyOptions = [
+  { value: "Easy", label: "Easy" },
+  { value: "Medium", label: "Medium" },
+  { value: "Hard", label: "Hard" },
+];
+
+export default function DashboardClient({
+  initialProblems,
+  user,
+  token,
+  serverError,
+}) {
   const router = useRouter();
 
   const [problems, setProblems] = useState(initialProblems);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(serverError || null);
 
+  // State for Filtering & Sorting
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [difficultyFilter, setDifficultyFilter] = useState(null);
+  const [sortConfig, setSortConfig] = useState({
+    key: "Title",
+    direction: "ascending",
+  });
+  const [showOnlyDue, setShowOnlyDue] = useState(false);
+
+  // State for modals
   const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -37,7 +68,6 @@ export default function DashboardClient({ initialProblems, user, token }) {
   const [problemForHistory, setProblemForHistory] = useState(null);
   const [loopProblems, setLoopProblems] = useState([]);
   const [logError, setLogError] = useState(null);
-  const [showOnlyDue, setShowOnlyDue] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -54,18 +84,61 @@ export default function DashboardClient({ initialProblems, user, token }) {
     }
   };
 
-  const filteredProblems = useMemo(() => {
-    if (!showOnlyDue) return problems;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return problems.filter(
-      (p) => p.NextRevisionDate && new Date(p.NextRevisionDate) <= today
-    );
-  }, [problems, showOnlyDue]);
+  const filteredAndSortedProblems = useMemo(() => {
+    let processableProblems = [...problems];
+
+    if (showOnlyDue) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      processableProblems = processableProblems.filter(
+        (p) => p.NextRevisionDate && new Date(p.NextRevisionDate) <= today
+      );
+    }
+    if (searchTerm) {
+      processableProblems = processableProblems.filter((p) =>
+        p.Title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (statusFilter) {
+      processableProblems = processableProblems.filter(
+        (p) => p.Status === statusFilter.value
+      );
+    }
+    if (difficultyFilter) {
+      processableProblems = processableProblems.filter(
+        (p) => p.Difficulty === difficultyFilter.value
+      );
+    }
+
+    if (sortConfig.key !== null) {
+      processableProblems.sort((a, b) => {
+        const aValue = a[sortConfig.key] || "";
+        const bValue = b[sortConfig.key] || "";
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return processableProblems;
+  }, [
+    problems,
+    showOnlyDue,
+    searchTerm,
+    statusFilter,
+    difficultyFilter,
+    sortConfig,
+  ]);
 
   const handleLogout = async () => {
+    localStorage.removeItem("authToken");
     await fetch("/api/logout", { method: "POST" });
-    router.push("/login");
+    window.location.assign("/login");
   };
 
   const handleSave = (savedProblem) => {
@@ -123,21 +196,15 @@ export default function DashboardClient({ initialProblems, user, token }) {
   const handleStartLoop = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const dueProblems = problems.filter(
       (p) => p.NextRevisionDate && new Date(p.NextRevisionDate) <= today
     );
-
     if (dueProblems.length === 0) {
-      alert(
-        "Great job! Nothing is due for revision today. Feel free to practice any problem by opening its revision history."
-      );
+      alert("Great job! Nothing is due for revision today.");
       return;
     }
-
     const shuffled = [...dueProblems].sort(() => 0.5 - Math.random());
     const selectedProblems = shuffled.slice(0, 3);
-
     setLoopProblems(selectedProblems);
     setIsLoopModalOpen(true);
   };
@@ -147,14 +214,12 @@ export default function DashboardClient({ initialProblems, user, token }) {
       setIsLoopModalOpen(false);
       return;
     }
-
     const revisionPromises = Object.entries(timeLogs).map(
       ([index, timeTaken]) => {
         const problemId = loopProblems[parseInt(index)].ID;
         return logRevision(problemId, { timeTaken });
       }
     );
-
     try {
       await Promise.all(revisionPromises);
       await refreshProblems();
@@ -163,7 +228,6 @@ export default function DashboardClient({ initialProblems, user, token }) {
         `An error occurred while saving your loop progress: ${err.message}`
       );
     }
-
     setIsLoopModalOpen(false);
   };
 
@@ -203,20 +267,30 @@ export default function DashboardClient({ initialProblems, user, token }) {
     }
   };
 
+  const requestSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
   const renderContent = () => {
     if (error)
       return (
-        <div className="text-center p-16 text-red-600">Error: {error}</div>
+        <div className="text-center p-16 text-red-600 bg-red-50 rounded-lg">
+          Error: {error}
+        </div>
       );
-    if (filteredProblems.length === 0) {
-      if (showOnlyDue) {
+    if (filteredAndSortedProblems.length === 0) {
+      if (showOnlyDue || searchTerm || statusFilter || difficultyFilter) {
         return (
           <div className="mt-8 text-center border-2 border-dashed border-slate-300 rounded-xl py-16 bg-white">
             <h3 className="text-xl font-semibold text-slate-700">
-              All Caught Up!
+              No Problems Found
             </h3>
             <p className="text-slate-500 mt-2">
-              You have no problems due for revision today. Great work!
+              Try adjusting your filters to find what you're looking for.
             </p>
           </div>
         );
@@ -240,11 +314,13 @@ export default function DashboardClient({ initialProblems, user, token }) {
     }
     return (
       <ProblemsTable
-        problems={filteredProblems}
+        problems={filteredAndSortedProblems}
         onView={handleViewProblem}
         onEdit={handleOpenEditorForEdit}
         onDelete={openDeleteConfirm}
         onLogRevision={handleOpenHistoryModal}
+        sortConfig={sortConfig}
+        requestSort={requestSort}
       />
     );
   };
@@ -257,7 +333,10 @@ export default function DashboardClient({ initialProblems, user, token }) {
             <h1 className="text-xl font-bold text-slate-800">BrainLoop</h1>
             <div className="flex items-center gap-4">
               <span className="text-slate-600 hidden sm:block">
-                Welcome, <span className="font-medium">{user.username}</span>
+                Welcome,{" "}
+                <span className="font-medium">
+                  {user?.username || user?.email}
+                </span>
               </span>
               <button
                 onClick={handleLogout}
@@ -299,15 +378,39 @@ export default function DashboardClient({ initialProblems, user, token }) {
           </div>
 
           {problems.length > 0 && (
-            <div className="mb-6 p-4 bg-white rounded-xl border border-slate-200/80 flex items-center justify-between">
-              <FilterToggle
-                label="Show Only Due For Revision"
-                isChecked={showOnlyDue}
-                onChange={() => setShowOnlyDue(!showOnlyDue)}
-              />
-              <p className="text-sm text-slate-500">
-                Showing {filteredProblems.length} of {problems.length} problems
-              </p>
+            <div className="mb-6 p-4 bg-white rounded-xl border border-slate-200/80">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input
+                  type="text"
+                  placeholder="Search by title..."
+                  className="md:col-span-2 w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Select
+                  isClearable
+                  placeholder="Filter by Status"
+                  options={statusOptions}
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  instanceId="status-filter-select"
+                />
+                <Select
+                  isClearable
+                  placeholder="Filter by Difficulty"
+                  options={difficultyOptions}
+                  value={difficultyFilter}
+                  onChange={setDifficultyFilter}
+                  instanceId="difficulty-filter-select"
+                />
+              </div>
+              <div className="mt-4 border-t border-slate-200 pt-4">
+                <FilterToggle
+                  label="Show Only Due For Revision"
+                  isChecked={showOnlyDue}
+                  onChange={() => setShowOnlyDue(!showOnlyDue)}
+                />
+              </div>
             </div>
           )}
 
@@ -315,7 +418,6 @@ export default function DashboardClient({ initialProblems, user, token }) {
         </main>
       </div>
 
-      {/* All modals are rendered here */}
       <ProblemEditorModal
         isOpen={isEditorModalOpen}
         onClose={handleCloseEditor}

@@ -2,21 +2,18 @@
 
 const formatRevisionDate = (dateString) => {
   if (!dateString) return { text: "Not Scheduled", color: "text-slate-400" };
-
   const revisionDate = new Date(dateString);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   revisionDate.setHours(0, 0, 0, 0);
-
   const diffTime = revisionDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays < 0) {
+  if (diffDays < 0)
     return {
       text: `Due ${Math.abs(diffDays)}d ago`,
       color: "text-red-600 font-semibold",
     };
-  }
   switch (diffDays) {
     case 0:
       return { text: "Due Today", color: "text-amber-600 font-semibold" };
@@ -53,12 +50,41 @@ const getStatusStyles = (status) => {
   }
 };
 
+const SortableHeader = ({
+  children,
+  sortKey,
+  sortConfig,
+  requestSort,
+  className = "",
+}) => {
+  const isSorted = sortConfig.key === sortKey;
+  const directionIcon = isSorted
+    ? sortConfig.direction === "ascending"
+      ? "▲"
+      : "▼"
+    : "";
+  return (
+    <th
+      scope="col"
+      className={`px-6 py-4 font-medium text-slate-500 cursor-pointer ${className}`}
+      onClick={() => requestSort(sortKey)}
+    >
+      <div className="flex items-center justify-center gap-2">
+        {children}
+        <span className="text-xs">{directionIcon}</span>
+      </div>
+    </th>
+  );
+};
+
 export default function ProblemsTable({
   problems,
   onView,
   onEdit,
   onDelete,
   onLogRevision,
+  sortConfig,
+  requestSort,
 }) {
   return (
     <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm">
@@ -68,28 +94,44 @@ export default function ProblemsTable({
             <tr>
               <th
                 scope="col"
-                className="px-6 py-4 text-left font-medium text-slate-500 w-2/5"
+                className="px-6 py-4 text-left font-medium text-slate-500 w-2/5 cursor-pointer"
+                onClick={() => requestSort("Title")}
               >
-                Title
+                <div className="flex items-center gap-2">
+                  Title
+                  <span className="text-xs">
+                    {sortConfig.key === "Title"
+                      ? sortConfig.direction === "ascending"
+                        ? "▲"
+                        : "▼"
+                      : ""}
+                  </span>
+                </div>
               </th>
-              <th
-                scope="col"
-                className="px-6 py-4 text-center font-medium text-slate-500 w-1/6"
+              <SortableHeader
+                sortKey="NextRevisionDate"
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+                className="w-1/6"
               >
                 Next Revision
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-4 text-center font-medium text-slate-500 w-1/6"
+              </SortableHeader>
+              <SortableHeader
+                sortKey="Status"
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+                className="w-1/6"
               >
                 Status
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-4 text-center font-medium text-slate-500 w-1/6"
+              </SortableHeader>
+              <SortableHeader
+                sortKey="Difficulty"
+                sortConfig={sortConfig}
+                requestSort={requestSort}
+                className="w-1/6"
               >
                 Difficulty
-              </th>
+              </SortableHeader>
               <th
                 scope="col"
                 className="px-6 py-4 text-center font-medium text-slate-500 w-1/4"
