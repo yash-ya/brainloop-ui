@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
+import toast, { Toaster } from "react-hot-toast";
 import {
   getProblems,
   deleteProblem,
@@ -10,7 +11,6 @@ import {
   logRevision,
 } from "@/lib/api";
 
-// Import all necessary components
 import ProblemEditorModal from "@/components/ProblemEditorModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import ProblemsTable from "@/components/ProblemsTable";
@@ -20,7 +20,6 @@ import RevisionHistoryModal from "@/components/RevisionHistoryModal";
 import LoopModal from "@/components/LoopModal";
 import FilterToggle from "@/components/FilterToggle";
 
-// --- Options for the filter dropdowns ---
 const statusOptions = [
   { value: "To Do", label: "To Do" },
   { value: "In Progress", label: "In Progress" },
@@ -44,7 +43,6 @@ export default function DashboardClient({
   const [problems, setProblems] = useState(initialProblems);
   const [error, setError] = useState(serverError || null);
 
-  // State for Filtering & Sorting
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(null);
   const [difficultyFilter, setDifficultyFilter] = useState(null);
@@ -54,7 +52,6 @@ export default function DashboardClient({
   });
   const [showOnlyDue, setShowOnlyDue] = useState(false);
 
-  // State for modals
   const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -200,7 +197,7 @@ export default function DashboardClient({
       (p) => p.NextRevisionDate && new Date(p.NextRevisionDate) <= today
     );
     if (dueProblems.length === 0) {
-      alert("Great job! Nothing is due for revision today.");
+      toast.success("Great job! Nothing is due for revision today.");
       return;
     }
     const shuffled = [...dueProblems].sort(() => 0.5 - Math.random());
@@ -223,10 +220,9 @@ export default function DashboardClient({
     try {
       await Promise.all(revisionPromises);
       await refreshProblems();
+      toast.success("Loop progress saved successfully!");
     } catch (err) {
-      alert(
-        `An error occurred while saving your loop progress: ${err.message}`
-      );
+      toast.error(`An error occurred: ${err.message}`);
     }
     setIsLoopModalOpen(false);
   };
@@ -241,6 +237,7 @@ export default function DashboardClient({
       ]);
       refreshProblems();
       handleCloseLogModal();
+      toast.success("Initial time logged!");
     } catch (err) {
       setLogError(err.message);
     }
@@ -250,8 +247,9 @@ export default function DashboardClient({
     try {
       await logRevision(problemId, revisionData);
       await refreshProblems();
+      toast.success("New revision added!");
     } catch (err) {
-      alert(`Error adding revision: ${err.message}`);
+      toast.error(`Error adding revision: ${err.message}`);
     }
   };
 
@@ -260,8 +258,10 @@ export default function DashboardClient({
     try {
       await deleteProblem(problemToDelete);
       setProblems(problems.filter((p) => p.ID !== problemToDelete));
+      toast.success("Problem deleted successfully.");
     } catch (err) {
       setError(err.message);
+      toast.error(`Error deleting problem: ${err.message}`);
     } finally {
       closeDeleteConfirm();
     }
@@ -327,6 +327,8 @@ export default function DashboardClient({
 
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
+
       <div className="min-h-screen bg-slate-100 font-sans">
         <header className="bg-slate-100/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">

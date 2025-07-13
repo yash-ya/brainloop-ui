@@ -14,6 +14,10 @@ async function getProblemsOnServer(token) {
   return res;
 }
 
+export const metadata = {
+  title: "Dashboard | BrainLoop",
+};
+
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
