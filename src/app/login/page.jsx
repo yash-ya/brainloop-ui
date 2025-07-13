@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import AuthForm from "@/components/AuthForm";
+import AuthForm from "./AuthForm";
 
 function Loading() {
   return (
@@ -10,7 +10,7 @@ function Loading() {
 }
 
 export const metadata = {
-  title: "Login or Sign Up",
+  title: "Login or Sign Up | BrainLoop",
 };
 
 export default function LoginPage() {

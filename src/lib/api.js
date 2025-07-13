@@ -1,4 +1,4 @@
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1`;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const handleResponse = async (response) => {
   if (response.status === 204) {
@@ -16,8 +16,8 @@ const handleResponse = async (response) => {
   return response.json();
 };
 
-const apiFetch = async (endpoint, options = {}) => {
-  const token = localStorage.getItem("authToken");
+const apiFetch = async (endpoint, options = {}, token = "") => {
+  token = !token ? localStorage.getItem("authToken") : token;
   if (!token) {
     throw new Error("Authentication token not found. Please log in again.");
   }
@@ -37,6 +37,11 @@ const apiFetch = async (endpoint, options = {}) => {
 
 export const getProblems = async () => {
   const response = await apiFetch("/questions");
+  return handleResponse(response);
+};
+
+export const getProblemsWithToken = async (token) => {
+  const response = await apiFetch("/questions", {}, token);
   return handleResponse(response);
 };
 
