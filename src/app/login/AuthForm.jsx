@@ -12,6 +12,7 @@ export default function AuthForm() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,27 +24,50 @@ export default function AuthForm() {
     } else {
       setIsLoginView(true);
     }
-  }, [searchParams]);
+
+    if (searchParams.get("registered") === "true") {
+      setSuccessMessage("Registration successful! Please log in.");
+      router.replace("/login", undefined, { shallow: true });
+    }
+  }, [searchParams, router]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccessMessage("");
 
     try {
       if (isLoginView) {
         const data = await loginUser(email, password);
-        localStorage.setItem("authToken", data.token);
-        router.push("/dashboard");
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: data.token }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create login session. Please try again.");
+        }
+        window.location.assign("/dashboard");
       } else {
         await registerUser(username, email, password);
-        router.push("/login");
+        router.push("/login?registered=true");
       }
     } catch (error) {
       setError(error.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleView = () => {
+    setIsLoginView(!isLoginView);
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setError(null);
+    setSuccessMessage("");
   };
 
   return (
@@ -68,6 +92,15 @@ export default function AuthForm() {
           </p>
         </div>
 
+        {successMessage && (
+          <div
+            className="p-3 text-sm text-green-800 bg-green-100 rounded-lg"
+            role="alert"
+          >
+            <span className="font-medium">Success!</span> {successMessage}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">
             {!isLoginView && (
@@ -89,6 +122,7 @@ export default function AuthForm() {
                 id="email"
                 name="email"
                 type="email"
+                autoComplete="email"
                 required
                 className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition-colors"
                 placeholder="Email address"
@@ -101,6 +135,7 @@ export default function AuthForm() {
                 id="password"
                 name="password"
                 type="password"
+                autoComplete={isLoginView ? "current-password" : "new-password"}
                 required
                 className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition-colors"
                 placeholder="Password"
@@ -137,12 +172,7 @@ export default function AuthForm() {
         <div className="text-sm text-center">
           <button
             type="button"
-            onClick={() => {
-              setIsLoginView(!isLoginView);
-              setEmail("");
-              setPassword("");
-              setError("");
-            }}
+            onClick={toggleView}
             className="font-medium text-sky-600 hover:text-sky-500"
           >
             {isLoginView

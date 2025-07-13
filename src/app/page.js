@@ -1,5 +1,8 @@
+// File: src/app/page.jsx
 import Link from "next/link";
+import Image from "next/image";
 
+// --- Redesigned Feature Card Component ---
 function FeatureCard({ icon, title, children }) {
   return (
     <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
@@ -35,36 +38,38 @@ export default function LandingPage() {
         </div>
       </nav>
 
+      {/* --- UPDATED HERO SECTION --- */}
       <main className="relative text-center container mx-auto px-6 pt-24 pb-32 md:pt-32">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="w-[80vw] h-[50vh] bg-gradient-to-r from-sky-200/50 to-cyan-200/50 rounded-full blur-3xl opacity-50 animate-pulse" />
         </div>
         <div className="relative z-10">
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-sky-500 to-cyan-500">
-            Master Your Concepts. Permanently.
+            Stop Cramming. Start Mastering.
           </h1>
           <p className="mt-6 text-lg text-slate-600 max-w-2xl mx-auto">
-            Turn your study sessions into permanent knowledge. BrainLoop&apos;s
-            smart revision system ensures you retain what you learn,
-            effortlessly.
+            BrainLoop&apos;s Spaced Repetition System turns your study efforts
+            into lasting knowledge. Enter &apos;The Loop&apos; for smart, daily
+            revision sessions tailored just for you.
           </p>
           <Link
             href="/login"
             className="mt-10 inline-block px-8 py-4 bg-sky-500 text-white text-lg font-bold rounded-full hover:bg-sky-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50"
           >
-            Start Building Your Knowledge
+            Launch Your Dashboard
           </Link>
         </div>
       </main>
 
+      {/* --- UPDATED FEATURES SECTION --- */}
       <section className="relative bg-slate-50 border-y border-slate-200 py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold tracking-tight text-slate-900">
-              A Foundation for Deeper Learning
+              A Smarter Way to Study
             </h2>
             <p className="text-slate-500 mt-2">
-              Core features designed for true comprehension.
+              Core features designed for deep, lasting comprehension.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -88,11 +93,11 @@ export default function LandingPage() {
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               }
-              title="Log Your Journey"
+              title="Track Everything"
             >
-              Effortlessly capture every DSA question, CS concept, or note. With
-              a clean and simple interface, logging what you learn becomes a
-              seamless part of your study process.
+              From problem statements and examples to your personal notes and
+              tags, BrainLoop provides a structured home for every detail. Keep
+              your learning organized and accessible.
             </FeatureCard>
             <FeatureCard
               icon={
@@ -107,23 +112,22 @@ export default function LandingPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <polyline points="1 4 1 10 7 10"></polyline>
-                  <polyline points="23 20 23 14 17 14"></polyline>
-                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                  <path d="M2.5 2v6h6M21.5 22v-6h-6" />
+                  <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2" />
                 </svg>
               }
-              title="Intelligent Revision"
+              title="Enter The Loop"
             >
-              Our system schedules revisions using a spaced repetition
-              algorithm. It prompts you to review concepts just before
-              you&apos;re about to forget them, maximizing retention.
+              Click &apos;Start Loop&apos; to enter a focused study session. Our
+              system intelligently selects problems that are due for revision,
+              creating your personalized daily quest to conquer concepts.
             </FeatureCard>
             <FeatureCard
               icon={
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="48"
-                  height="48"
+                  width="50"
+                  height="50"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -131,15 +135,15 @@ export default function LandingPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <circle cx="12" cy="8" r="7"></circle>
-                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                  <path d="M9.828 9.172a4 4 0 1 0 0 5.656a10 10 0 0 0 2.172 -2.828a10 10 0 0 1 2.172 -2.828a4 4 0 1 1 0 5.656a10 10 0 0 1 -2.172 -2.828a10 10 0 0 0 -2.172 -2.828" />
                 </svg>
               }
-              title="Build Lasting Knowledge"
+              title="Learn for the Long-Term"
             >
-              Go beyond temporary memorization. By creating a structured loop of
-              learning and revision, you build a deep, interconnected web of
-              knowledge that sticks with you for your entire career.
+              Our Spaced Repetition engine schedules reviews at the perfect
+              moment to move knowledge into your long-term memory. Track your
+              progress with detailed revision history and watch your skills
+              grow.
             </FeatureCard>
           </div>
         </div>
@@ -147,7 +151,10 @@ export default function LandingPage() {
 
       <footer className="bg-slate-50">
         <div className="container mx-auto px-6 py-12 text-center text-slate-500 border-t border-slate-200">
-          <p>&copy; 2025 BrainLoop by MidayTech. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} BrainLoop by MidayTech. All rights
+            reserved.
+          </p>
         </div>
       </footer>
     </div>

@@ -1,5 +1,32 @@
 "use client";
 
+const formatRevisionDate = (dateString) => {
+  if (!dateString) return { text: "Not Scheduled", color: "text-slate-400" };
+
+  const revisionDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  revisionDate.setHours(0, 0, 0, 0);
+
+  const diffTime = revisionDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return {
+      text: `Due ${Math.abs(diffDays)}d ago`,
+      color: "text-red-600 font-semibold",
+    };
+  }
+  switch (diffDays) {
+    case 0:
+      return { text: "Due Today", color: "text-amber-600 font-semibold" };
+    case 1:
+      return { text: "Due Tomorrow", color: "text-blue-600" };
+    default:
+      return { text: `In ${diffDays} days`, color: "text-slate-500" };
+  }
+};
+
 const getDifficultyStyles = (difficulty) => {
   switch (difficulty?.toLowerCase()) {
     case "easy":
@@ -34,7 +61,7 @@ export default function ProblemsTable({
   onLogRevision,
 }) {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm ">
+    <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm table-fixed">
           <thead className="border-b border-slate-200">
@@ -44,6 +71,12 @@ export default function ProblemsTable({
                 className="px-6 py-4 text-left font-medium text-slate-500 w-2/5"
               >
                 Title
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-4 text-center font-medium text-slate-500 w-1/6"
+              >
+                Next Revision
               </th>
               <th
                 scope="col"
@@ -66,59 +99,67 @@ export default function ProblemsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200/80">
-            {problems.map((problem) => (
-              <tr
-                key={problem.ID}
-                className="hover:bg-slate-50/50 transition-colors duration-150"
-              >
-                <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                  <button
-                    onClick={() => onView(problem)}
-                    className="font-medium text-slate-800 hover:text-sky-600 text-left"
+            {problems.map((problem) => {
+              const revisionInfo = formatRevisionDate(problem.NextRevisionDate);
+              return (
+                <tr
+                  key={problem.ID}
+                  className="hover:bg-slate-50/50 transition-colors duration-150"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <button
+                      onClick={() => onView(problem)}
+                      className="font-medium text-slate-800 hover:text-sky-600 text-left"
+                    >
+                      {problem.Title}
+                    </button>
+                  </td>
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap text-center ${revisionInfo.color}`}
                   >
-                    {problem.Title}
-                  </button>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <span
-                    className={`px-2.5 py-1 inline-flex font-semibold rounded-full text-xs ring-1 ring-inset ${getStatusStyles(
-                      problem.Status
-                    )}`}
-                  >
-                    {problem.Status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <span
-                    className={`px-2.5 py-1 inline-flex font-semibold rounded-full text-xs ring-1 ring-inset ${getDifficultyStyles(
-                      problem.Difficulty
-                    )}`}
-                  >
-                    {problem.Difficulty}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                  <button
-                    onClick={() => onLogRevision(problem)}
-                    className="text-green-600 hover:text-green-800 transition-colors mr-4"
-                  >
-                    Revisions
-                  </button>
-                  <button
-                    onClick={() => onEdit(problem)}
-                    className="text-slate-600 hover:text-sky-600 transition-colors mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => onDelete(problem.ID)}
-                    className="text-red-500 hover:text-red-700 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    {revisionInfo.text}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span
+                      className={`px-2.5 py-1 inline-flex font-semibold rounded-full text-xs ring-1 ring-inset ${getStatusStyles(
+                        problem.Status
+                      )}`}
+                    >
+                      {problem.Status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span
+                      className={`px-2.5 py-1 inline-flex font-semibold rounded-full text-xs ring-1 ring-inset ${getDifficultyStyles(
+                        problem.Difficulty
+                      )}`}
+                    >
+                      {problem.Difficulty}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                    <button
+                      onClick={() => onLogRevision(problem)}
+                      className="text-green-600 hover:text-green-800 transition-colors mr-4"
+                    >
+                      Revisions
+                    </button>
+                    <button
+                      onClick={() => onEdit(problem)}
+                      className="text-slate-600 hover:text-sky-600 transition-colors mr-4"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(problem.ID)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
