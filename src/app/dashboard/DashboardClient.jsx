@@ -191,10 +191,10 @@ export default function DashboardClient({
   };
 
   const handleStartLoop = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date().getUTCDate();
     const dueProblems = problems.filter(
-      (p) => p.NextRevisionDate && new Date(p.NextRevisionDate) <= today
+      (p) =>
+        p.NextRevisionDate && new Date(p.NextRevisionDate).getUTCDate() <= today
     );
     if (dueProblems.length === 0) {
       toast.success("Great job! Nothing is due for revision today.");
