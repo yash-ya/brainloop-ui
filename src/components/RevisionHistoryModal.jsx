@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getRevisionHistory, logRevision } from "@/lib/api";
+import { getRevisionHistory } from "@/lib/api";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
