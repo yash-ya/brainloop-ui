@@ -4,6 +4,44 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
+const LoadingSpinner = () => (
+  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
+);
+
+const SuccessIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-16 w-16 mx-auto text-green-500"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const ErrorIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-16 w-16 mx-auto text-red-500"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
 async function verifyEmailToken(token) {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const response = await fetch(`${API_BASE_URL}/users/verify`, {
@@ -35,9 +73,7 @@ export default function VerifyEmailClient() {
 
     if (!token) {
       setStatus("error");
-      setMessage(
-        "No verification token found. Please check the link and try again."
-      );
+      setMessage("No verification token found. The link may be incomplete.");
       return;
     }
 
@@ -46,7 +82,7 @@ export default function VerifyEmailClient() {
         await verifyEmailToken(token);
         setStatus("success");
         setMessage(
-          "Your email has been successfully verified! You can now log in."
+          "Your email has been successfully verified! You can now log in to your account."
         );
       } catch (err) {
         setStatus("error");
@@ -57,24 +93,32 @@ export default function VerifyEmailClient() {
       }
     };
 
-    verifyToken();
+    const timer = setTimeout(verifyToken, 1000);
+    return () => clearTimeout(timer);
   }, [searchParams]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100">
+    <div className="flex items-center justify-center min-h-screen bg-slate-100 p-4">
       <div className="w-full max-w-md p-8 text-center bg-white rounded-2xl shadow-lg">
         {status === "verifying" && (
-          <p className="text-lg font-semibold text-slate-700">{message}</p>
+          <>
+            <LoadingSpinner />
+            <p className="text-lg font-semibold text-slate-700 mt-4">
+              {message}
+            </p>
+            <p className="text-sm text-slate-500">Please wait a moment.</p>
+          </>
         )}
         {status === "success" && (
           <>
-            <h1 className="text-2xl font-bold text-green-600">
+            <SuccessIcon />
+            <h1 className="text-2xl font-bold text-slate-800 mt-4">
               Verification Successful!
             </h1>
             <p className="mt-2 text-slate-600">{message}</p>
             <Link
               href="/login"
-              className="mt-6 inline-block px-6 py-2 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600"
+              className="mt-6 inline-block px-8 py-3 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600 transition-colors"
             >
               Go to Login
             </Link>
@@ -82,13 +126,14 @@ export default function VerifyEmailClient() {
         )}
         {status === "error" && (
           <>
-            <h1 className="text-2xl font-bold text-red-600">
+            <ErrorIcon />
+            <h1 className="text-2xl font-bold text-slate-800 mt-4">
               Verification Failed
             </h1>
             <p className="mt-2 text-slate-600">{message}</p>
             <Link
               href="/login?view=register"
-              className="mt-6 inline-block px-6 py-2 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700"
+              className="mt-6 inline-block px-6 py-2 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-colors"
             >
               Return to Sign Up
             </Link>
