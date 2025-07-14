@@ -3,7 +3,24 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast"; // Assuming react-hot-toast is installed
 import { loginUser, registerUser } from "@/lib/auth";
+
+async function resendVerificationEmail(email) {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const response = await fetch(`${API_BASE_URL}/users/resend-verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || "Failed to resend verification email."
+    );
+  }
+  return response.json();
+}
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 48 48">
@@ -34,6 +51,7 @@ export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showResendVerification, setShowResendVerification] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,9 +64,11 @@ export default function AuthForm() {
       setIsLoginView(true);
     }
 
-    if (searchParams.get("registered") === "true") {
-      setSuccessMessage("Registration successful! Please log in.");
-      router.replace("/login", undefined, { shallow: true });
+    if (searchParams.get("status") === "registered") {
+      setSuccessMessage(
+        "Registration successful! Please check your email to verify your account before logging in."
+      );
+      router.replace("/login", { shallow: true });
     }
   }, [searchParams, router]);
 
@@ -57,6 +77,7 @@ export default function AuthForm() {
     setIsLoading(true);
     setError(null);
     setSuccessMessage("");
+    setShowResendVerification(false);
 
     try {
       if (isLoginView) {
@@ -73,12 +94,28 @@ export default function AuthForm() {
         window.location.assign("/dashboard");
       } else {
         await registerUser(username, email, password);
-        router.push("/login?registered=true");
+        router.push("/login?status=registered");
       }
     } catch (error) {
       setError(error.message);
+      if (error.message.includes("Please verify your email")) {
+        setShowResendVerification(true);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setError(null);
+    setSuccessMessage("");
+    try {
+      await resendVerificationEmail(email);
+      toast.success("Verification email has been sent to your email.");
+      setShowResendVerification(false);
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -89,6 +126,7 @@ export default function AuthForm() {
     setPassword("");
     setError(null);
     setSuccessMessage("");
+    setShowResendVerification(false);
   };
 
   return (
@@ -115,7 +153,7 @@ export default function AuthForm() {
 
         {successMessage && (
           <div
-            className="p-3 text-sm text-green-800 bg-green-100 rounded-lg"
+            className="p-4 text-sm text-green-800 bg-green-100 rounded-lg"
             role="alert"
           >
             <span className="font-medium">Success!</span> {successMessage}
@@ -123,7 +161,7 @@ export default function AuthForm() {
         )}
 
         <a
-          href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`}
+          href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google/login`}
           className="w-full flex items-center justify-center gap-3 py-3 border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
         >
           <GoogleIcon />
@@ -191,6 +229,14 @@ export default function AuthForm() {
               role="alert"
             >
               <span className="font-medium">Error:</span> {error}
+              {showResendVerification && (
+                <button
+                  onClick={handleResend}
+                  className="ml-2 font-semibold underline cursor-pointer"
+                >
+                  Resend email?
+                </button>
+              )}
             </div>
           )}
 
