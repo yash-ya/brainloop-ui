@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import AuthForm from "./AuthForm";
+import AuthForm from "./AuthClient";
 
 function Loading() {
   return (

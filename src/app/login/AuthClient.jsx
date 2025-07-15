@@ -223,6 +223,17 @@ export default function AuthForm() {
             </div>
           </div>
 
+          {isLoginView && (
+            <div className="flex justify-end text-sm">
+              <Link
+                href="/forgot-password"
+                className="font-medium text-sky-600 hover:text-sky-500"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          )}
+
           {error && (
             <div
               className="p-3 text-sm text-red-700 bg-red-100 rounded-lg"
