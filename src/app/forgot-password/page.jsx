@@ -1,22 +1,22 @@
 import { Suspense } from "react";
-import ResetPasswordClient from "./ResetPasswordClient";
+import ForgotPasswordClient from "./ForgotPasswordClient";
 
 function Loading() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100">
-      <p className="text-lg font-semibold text-slate-700">Loading Page...</p>
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-lg">Loading...</p>
     </div>
   );
 }
 
 export const metadata = {
-  title: "Reset Your Password",
+  title: "Forgot Password | BrainLoop",
 };
 
-export default function ResetPasswordPage() {
+export default function ForgotPasswordPage() {
   return (
     <Suspense fallback={<Loading />}>
-      <ResetPasswordClient />
+      <ForgotPasswordClient />
     </Suspense>
   );
 }
