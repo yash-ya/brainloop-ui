@@ -3,24 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import toast from "react-hot-toast"; // Assuming react-hot-toast is installed
 import { loginUser, registerUser } from "@/lib/auth";
-
-async function resendVerificationEmail(email) {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const response = await fetch(`${API_BASE_URL}/users/resend-verification`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.message || "Failed to resend verification email."
-    );
-  }
-  return response.json();
-}
+import toast from "react-hot-toast";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 48 48">
@@ -63,7 +47,6 @@ export default function AuthForm() {
     } else {
       setIsLoginView(true);
     }
-
     if (searchParams.get("status") === "registered") {
       setSuccessMessage(
         "Registration successful! Please check your email to verify your account before logging in."
@@ -111,7 +94,7 @@ export default function AuthForm() {
     setSuccessMessage("");
     try {
       await resendVerificationEmail(email);
-      toast.success("Verification email has been sent to your email.");
+      toast.success("A new verification email has been sent to your address.");
       setShowResendVerification(false);
     } catch (err) {
       setError(err.message);
@@ -188,7 +171,7 @@ export default function AuthForm() {
                   name="username"
                   type="text"
                   required
-                  className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition-colors"
+                  className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg"
                   placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -202,20 +185,23 @@ export default function AuthForm() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition-colors"
+                className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete={isLoginView ? "current-password" : "new-password"}
                 required
-                className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg focus:ring-sky-500 focus:border-sky-500 transition-colors"
+                className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -255,7 +241,7 @@ export default function AuthForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 text-lg font-semibold text-white bg-sky-500 rounded-lg hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:bg-sky-300 transition-colors"
+              className="w-full py-3 text-lg font-semibold text-white bg-sky-500 rounded-lg hover:bg-sky-600"
             >
               {isLoading
                 ? "Processing..."
