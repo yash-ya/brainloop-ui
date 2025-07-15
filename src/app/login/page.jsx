@@ -10,7 +10,7 @@ function Loading() {
 }
 
 export const metadata = {
-  title: "Login or Sign Up | BrainLoop",
+  title: "Login or Sign Up",
 };
 
 export default function LoginPage() {

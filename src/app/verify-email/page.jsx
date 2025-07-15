@@ -12,7 +12,7 @@ function Loading() {
 }
 
 export const metadata = {
-  title: "Verify Your Email | BrainLoop",
+  title: "Verify Your Email",
 };
 
 export default function VerifyEmailPage() {

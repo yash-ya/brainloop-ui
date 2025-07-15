@@ -15,7 +15,7 @@ async function getProblemsOnServer(token) {
 }
 
 export const metadata = {
-  title: "Dashboard | BrainLoop",
+  title: "Dashboard",
 };
 
 export default async function DashboardPage() {

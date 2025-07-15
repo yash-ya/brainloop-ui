@@ -10,7 +10,7 @@ function Loading() {
 }
 
 export const metadata = {
-  title: "Reset Your Password | BrainLoop",
+  title: "Reset Your Password",
 };
 
 export default function ResetPasswordPage() {
