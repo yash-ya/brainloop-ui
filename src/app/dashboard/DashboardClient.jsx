@@ -1,3 +1,4 @@
+// File: src/app/dashboard/DashboardClient.jsx
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -11,6 +12,7 @@ import {
   logRevision,
 } from "@/lib/api";
 
+// Import all necessary components
 import ProblemEditorModal from "@/components/ProblemEditorModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import ProblemsTable from "@/components/ProblemsTable";
@@ -193,16 +195,33 @@ export default function DashboardClient({
   const handleStartLoop = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     const dueProblems = problems.filter(
       (p) => p.NextRevisionDate && new Date(p.NextRevisionDate) <= today
     );
-    if (dueProblems.length === 0) {
-      toast.success("Great job! Nothing is due for revision today.");
+
+    let problemsToLoop = [];
+
+    if (dueProblems.length > 0) {
+      const shuffled = [...dueProblems].sort(() => 0.5 - Math.random());
+      problemsToLoop = shuffled.slice(0, 3);
+    } else {
+      const doneProblems = problems.filter((p) => p.Status === "Done");
+      if (doneProblems.length > 0) {
+        toast.success("Nothing is due today. Starting a practice loop!");
+        const shuffled = [...doneProblems].sort(() => 0.5 - Math.random());
+        problemsToLoop = shuffled.slice(0, 3);
+      }
+    }
+
+    if (problemsToLoop.length === 0) {
+      toast.error(
+        "You need at least one 'Done' problem to start a practice loop."
+      );
       return;
     }
-    const shuffled = [...dueProblems].sort(() => 0.5 - Math.random());
-    const selectedProblems = shuffled.slice(0, 3);
-    setLoopProblems(selectedProblems);
+
+    setLoopProblems(problemsToLoop);
     setIsLoopModalOpen(true);
   };
 
