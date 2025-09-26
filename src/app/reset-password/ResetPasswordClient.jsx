@@ -19,6 +19,7 @@ async function resetPassword(token, newPassword) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to reset password.");
   }
+
   return response.json();
 }
 
